@@ -3,7 +3,7 @@ import sys
 import os
 import logging
 import logging.config
-from lib.minioclient import MinioClient
+from minioclient import MinioClient
 import yaml
 import time
 import datetime
@@ -42,7 +42,7 @@ def main():
 
     if params.ca:
         os.environ[SSL_CERT_FILE] = params.ca
-    if os.environ[SSL_CERT_FILE] is None or len(os.environ[SSL_CERT_FILE]) == 0:
+    if SSL_CERT_FILE not in os.environ or len(os.environ[SSL_CERT_FILE]) == 0:
         error("A certificate authority must be provided. Use '--ca' option or set {} environnement variable".format(SSL_CERT_FILE))
     client = MinioClient(params.server, params.accessKey, params.secretKey)
     if params.waitSeconds == 0:

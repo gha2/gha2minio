@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gha2minio
+  labels:
+    app: gha2minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gha2minio
+  template:
+    metadata:
+      labels:
+        app: gha2minio
+    spec:
+      containers:
+      - name: gha2minio
+        image: gha2/gha2minio:latest
+        env:
+          - name: SERVER
+            valueFrom:
+              secretKeyRef:
+                key: server
+                name: minio1-server
+          - name: ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: accessKey
+                name: minio1-server
+          - name: SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secretKey
+                name: minio1-server
+          - name: MAX_DOWNLOADS
+            value: "1000"
+          - name: WAIT_SECONDS
+            value: "1800"
+          - name: CA
+            value: /ca/ca.crt
+          - name: WAIT_ON_ERROR
+            value: "500"
+        volumeMounts:
+          - mountPath: /ca/ca.crt
+            name: minio-ca
+            subPath: ca.crt
+          - mountPath: /data
+            name: workdir
+      securityContext:
+        runAsUser: 1001
+      volumes:
+        - name: minio-ca
+          secret:
+            defaultMode: 420
+            secretName: cluster-issuer1-ca
+        - name: workdir
+          emptyDir: {}
+

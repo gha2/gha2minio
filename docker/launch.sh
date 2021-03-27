@@ -6,6 +6,9 @@ OPTS="--server $SERVER"
 OPTS="$OPTS --accessKey $ACCESS_KEY"
 OPTS="$OPTS --secretKey $SECRET_KEY"
 
+if [ -n "$UNSECURE" ] && [ "$UNSECURE" = "yes" ]; then
+  OPTS="$OPTS --unsecure"
+fi
 
 if [ -n "$BUCKET_FORMAT" ]; then
   OPTS="$OPTS --bucketFormat $BUCKET_FORMAT"
@@ -39,7 +42,7 @@ if [ -n "$WORK_DIR" ]; then
   OPTS="$OPTS --workDir $WORK_DIR"
 fi
 
-if [ -n "$WAIT_ON_ERROR" ]; then
+if [ -n "$SET_X" ] && [ "$SET_X" = "yes" ]; then
   set -x
 fi
 

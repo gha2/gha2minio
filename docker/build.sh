@@ -2,7 +2,8 @@
 
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-IMG=gha2/gha2minio:latest
+#IMG=gha2/gha2minio:latest
+IMG=registry.gitlab.com/gha1/gha2minio:latest
 
 cd "$MYDIR/.." || exit 1
 

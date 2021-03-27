@@ -4,8 +4,8 @@ from minio.error import BucketAlreadyOwnedByYou, BucketAlreadyExists, ResponseEr
 
 class MinioClient:
 
-    def __init__(self, host, login, password):
-        self.minio = Minio(host, access_key=login, secret_key=password, secure=True)
+    def __init__(self, host, login, password, secure):
+        self.minio = Minio(host, access_key=login, secret_key=password, secure=secure)
 
     def ensure_bucket(self, bucketName):
         try:

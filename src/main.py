@@ -26,6 +26,7 @@ def main():
     parser.add_argument('--server', required=True)
     parser.add_argument('--accessKey', required=True)
     parser.add_argument('--secretKey', required=True)
+    parser.add_argument('--unsecure', action="store_true")
     parser.add_argument('--bucketFormat', default="gha2minio-{year:04d}")
     parser.add_argument('--objectFormat', default="{year:04d}/{month:02d}/{day:02d}/{hour:02d}.json.gz")
     parser.add_argument('--backDays', type=int, default=1)
@@ -42,14 +43,15 @@ def main():
 
     if params.ca:
         os.environ[SSL_CERT_FILE] = params.ca
-    if SSL_CERT_FILE not in os.environ or len(os.environ[SSL_CERT_FILE]) == 0:
-        error("A certificate authority must be provided. Use '--ca' option or set {} environnement variable".format(SSL_CERT_FILE))
-    client = MinioClient(params.server, params.accessKey, params.secretKey)
+    if not params.unsecure and (SSL_CERT_FILE not in os.environ or len(os.environ[SSL_CERT_FILE]) == 0):
+        error("If not 'unsecure', a certificate authority must be provided. Use '--ca' option or set {} environnement variable".format(SSL_CERT_FILE))
+    client = MinioClient(params.server, params.accessKey, params.secretKey, not params.unsecure)
     if params.waitSeconds == 0:
         run(client, params)
     else:
         while True:
             run(client, params)
+            logger.info("Will be back on work in {} seconds".format(params.waitSeconds))
             time.sleep(params.waitSeconds)
 
 
@@ -81,12 +83,12 @@ def run(client, params):
             ts = ts + datetime.timedelta(hours=1)
             count += 1
         elif st == ObjectStatus.NOT_FOUND:
-            logger.info("No more file to download. Exiting")
+            logger.info("Unsuccessful. No more file to download. End of work")
             break
         else:
             error("Unknow FileStatus '{}'!".format(st))
     if count >= params.maxDownloads:
-        logger.info("Max download count ({}) has been reached. Exiting".format(params.maxDownloads))
+        logger.info("Max download count ({}) has been reached. End of work".format(params.maxDownloads))
 
 # We download on local folder, then move on object storage. This, to ease error handling on download.
 def handle_file(minoClient, params, file_ts, unsure_ts):
@@ -104,7 +106,7 @@ def handle_file(minoClient, params, file_ts, unsure_ts):
         logger.info("File '{}//{} already downloaded. Skipping".format(bucket, object))
         return ObjectStatus.EXIST
     src_file_name = "{:04d}-{:02d}-{:02d}-{:d}.json.gz".format(file_ts.year, file_ts.month, file_ts.day, file_ts.hour)
-    logger.debug("Will download file '{}' to '{}'".format(src_file_name, tmp_file_path))
+    logger.info("Will try to download file '{}' to '{}'".format(src_file_name, tmp_file_path))
     if get_file(src_file_name, tmp_file_path):
         logger.debug("Will move downloaded file to '{}//{}".format(bucket, object))
         minoClient.put_file(bucket, object, tmp_file_path, "application/json")

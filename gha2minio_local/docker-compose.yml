@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+  minio:
+    image: minio/minio
+    environment:
+      - MINIO_ACCESS_KEY=accesskey
+      - MINIO_SECRET_KEY=secretkey
+    volumes:
+      - minio_data:/data
+    ports:
+      - 9000:9000
+    command: server /data
+
+  gha2minio:
+    image: gha2/gha2minio:latest
+    environment:
+      - SERVER=minio:9000
+      - UNSECURE=yes
+      - ACCESS_KEY=accesskey
+      - SECRET_KEY=secretkey
+      - WAIT_SECONDS=10
+      - MAX_DOWNLOADS=2
+      - BACK_DAYS=0
+    volumes:
+      - gha2minio_data:/data
+
+volumes:
+  minio_data:
+  gha2minio_data:
+
+
